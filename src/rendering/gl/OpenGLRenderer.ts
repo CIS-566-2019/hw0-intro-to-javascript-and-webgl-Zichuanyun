@@ -22,20 +22,31 @@ class OpenGLRenderer {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
 
-  render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>) {
-    let model = mat4.create();
+  render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>,
+    modelMats: Array<mat4>, color: vec4) {
+    
     let viewProj = mat4.create();
-    let color = vec4.fromValues(1, 0, 0, 1);
 
-    mat4.identity(model);
     mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
-    prog.setModelMatrix(model);
     prog.setViewProjMatrix(viewProj);
     prog.setGeometryColor(color);
 
-    for (let drawable of drawables) {
+    let i = 0;
+    for (i = 0; i < drawables.length; ++i) {
+      let drawable = drawables[i];
+      let model = modelMats[i];
+      prog.setModelMatrix(model);
       prog.draw(drawable);
     }
+    
+    /*
+    for (let drawable of drawables) {
+      let model = mat4.create();
+      mat4.identity(model);
+      prog.setModelMatrix(model);
+      prog.draw(drawable);
+    }
+    */
   }
 };
 
