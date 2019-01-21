@@ -16,8 +16,10 @@ const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
   color: "#ffae23", // CSS string
+  shader: 'modified lambert',
 };
 
+// geoms
 let icosphere: Icosphere;
 let icosphere_model_mat = mat4.create();
 let square: Square;
@@ -25,10 +27,11 @@ let square_model_mat = mat4.create();
 let cube: Cube;
 let cube_model_mat = mat4.create();
 let prevTesselations: number = 5;
+let startTime: number = Date.now();
 
+// helpers
 let identity_mat = mat4.create();
 mat4.identity(identity_mat);
-
 let t_vec3 = vec3.create();
 
 function hexToRgb(hex: string) {
@@ -62,7 +65,8 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
-  gui.addColor(controls, "color");
+  gui.addColor(controls, 'color');
+  gui.add(controls, 'shader', ['lambert', 'modified lambert']);
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -87,6 +91,11 @@ function main() {
   const lambert = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
+  ]);
+
+  const lambert_modified = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert-modified.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag-modified.glsl')),
   ]);
 
   // This function will be called every frame
@@ -121,15 +130,23 @@ function main() {
       cube.center[2]);
     mat4.translate(cube_model_mat, identity_mat, t_vec3);
     
-    // get colro value from gui
-    
+    // get color value from gui
     let color_in = hexToRgb(controls.color);
 
-    renderer.render(camera, lambert,
+    // get shader from gui
+    let cur_shader: ShaderProgram;
+    if (controls.shader == 'lambert') {
+      cur_shader = lambert;
+    } else if (controls.shader == 'modified lambert') {
+      cur_shader = lambert_modified;
+    }
+    let time_helper = Date.now() - startTime;
+    renderer.render(camera, cur_shader,
       [icosphere, square, cube], [icosphere_model_mat, square_model_mat,
         cube_model_mat],
-    vec4.fromValues(color_in.r, color_in.g, color_in.b, 1));
-    console.log(color_in);
+    vec4.fromValues(color_in.r, color_in.g, color_in.b, 1),
+    time_helper / 1000);
+    console.log(time_helper / 1000);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

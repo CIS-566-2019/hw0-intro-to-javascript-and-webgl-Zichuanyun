@@ -23,13 +23,14 @@ class OpenGLRenderer {
   }
 
   render(camera: Camera, prog: ShaderProgram, drawables: Array<Drawable>,
-    modelMats: Array<mat4>, color: vec4) {
+    modelMats: Array<mat4>, color: vec4, time: number) {
     
     let viewProj = mat4.create();
 
     mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
     prog.setViewProjMatrix(viewProj);
     prog.setGeometryColor(color);
+    prog.setShaderTime(time);
 
     let i = 0;
     for (i = 0; i < drawables.length; ++i) {
